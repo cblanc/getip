@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/olekukonko/tablewriter"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -25,45 +26,67 @@ type Ip struct {
 	Query       string
 }
 
-func main() {
-	address := ""
+func logError(err error) {
+	fmt.Printf("%s", err)
+	os.Exit(1)
+}
 
-	if len(os.Args) < 2 {
-		fmt.Printf("Lookup up current IP Address\n")
-	} else {
-		address = os.Args[1]
-		fmt.Printf("Looking up: %s\n", address)
+func prettyPrint(ip Ip) {
+	data := [][]string{
+		[]string{"Country", ip.Country},
+		[]string{"Country Code", ip.CountryCode},
+		[]string{"Region", ip.Region},
+		[]string{"Region Name", ip.RegionName},
+		[]string{"City", ip.City},
+		[]string{"Latitude", ip.Lat},
+		[]string{"Longitude", ip.Lon},
+		[]string{"Timezone", ip.Timezone},
+		[]string{"ISP", ip.Isp},
+		[]string{"Organisation", ip.Org},
+		[]string{"Autonomous System Number & Name", ip.As},
+		[]string{"Querying IP Address (You)", ip.Query},
 	}
-	fmt.Printf("----------------------------\n")
+
+	table := tablewriter.NewWriter(os.Stdout)
+
+	for _, v := range data {
+		table.Append(v)
+	}
+
+	table.Render()
+}
+
+func extractAddress(args []string) string {
+	if len(args) < 2 {
+		fmt.Printf("\nLookup up current IP Address\n")
+		return ""
+	} else {
+		address := args[1]
+		fmt.Printf("\nLooking up: %s\n", address)
+		return address
+	}
+}
+
+func main() {
+	address := extractAddress(os.Args)
 
 	response, err := http.Get("http://ip-api.com/json/" + address)
 	if err != nil {
-		fmt.Printf("%s", err)
-		os.Exit(1)
-	} else {
-		defer response.Body.Close()
-		contents, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			fmt.Printf("%s", err)
-			os.Exit(1)
-		}
-		var ip Ip
-		jsonError := json.Unmarshal(contents, &ip)
-		if jsonError != nil {
-			fmt.Printf("%s", jsonError)
-			os.Exit(1)
-		}
-		fmt.Printf("Country: %s\n", ip.Country)
-		fmt.Printf("Country Code: %s\n", ip.CountryCode)
-		fmt.Printf("Region: %s\n", ip.Region)
-		fmt.Printf("Region Name: %s\n", ip.RegionName)
-		fmt.Printf("City: %s\n", ip.City)
-		fmt.Printf("Latitude: %s\n", ip.Lat)
-		fmt.Printf("Longitude: %s\n", ip.Lon)
-		fmt.Printf("Timezone: %s\n", ip.Timezone)
-		fmt.Printf("ISP: %s\n", ip.Isp)
-		fmt.Printf("Organisation: %s\n", ip.Org)
-		fmt.Printf("Autonomous System Number & Name: %s\n", ip.As)
-		fmt.Printf("Querying IP Address (You): %s\n\n", ip.Query)
+		logError(err)
 	}
+	defer response.Body.Close()
+
+	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		logError(err)
+	}
+
+	var ip Ip
+	jsonError := json.Unmarshal(contents, &ip)
+
+	if jsonError != nil {
+		logError(jsonError)
+	}
+
+	prettyPrint(ip)
 }
