@@ -7,23 +7,24 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 type Ip struct {
-	Status      string
-	Country     string
-	CountryCode string
-	Region      string
-	RegionName  string
-	City        string
-	Zip         string
-	Lat         string
-	Lon         string
-	Timezone    string
-	Isp         string
-	Org         string
-	As          string
-	Query       string
+	Status      string  `json:"status"`
+	Country     string  `json:"country"`
+	CountryCode string  `json:"countryCode"`
+	Region      string  `json:"region"`
+	RegionName  string  `json:"regionName"`
+	City        string  `json:"city"`
+	Zip         string  `json:"zip"`
+	Lat         float64 `json:"lat"`
+	Lon         float64 `json:"lon"`
+	Timezone    string  `json:"timezone"`
+	Isp         string  `json:"isp"`
+	Org         string  `json:"org"`
+	As          string  `json:"as"`
+	Query       string  `json:"query"`
 }
 
 func logError(err error) {
@@ -38,8 +39,8 @@ func prettyPrint(ip Ip) {
 		[]string{"Region", ip.Region},
 		[]string{"Region Name", ip.RegionName},
 		[]string{"City", ip.City},
-		[]string{"Latitude", ip.Lat},
-		[]string{"Longitude", ip.Lon},
+		[]string{"Latitude", strconv.FormatFloat(ip.Lat, 'f', 6, 64)},
+		[]string{"Longitude", strconv.FormatFloat(ip.Lon, 'f', 6, 64)},
 		[]string{"Timezone", ip.Timezone},
 		[]string{"ISP", ip.Isp},
 		[]string{"Organisation", ip.Org},
